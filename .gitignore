@@ -1,0 +1,33 @@
+# Build outputs
+bin/
+obj/
+publish/
+dist/
+
+# Project docs (not for public repo)
+功能提示词.md
+原型图.png
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs
+*.log
+
+# NuGet
+*.nupkg
+packages/
+
+# Test / coverage
+TestResults/
+coverage/

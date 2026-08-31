@@ -1,0 +1,151 @@
+<Window x:Class="PortTerminator.UI.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Port Terminator - 端口终结工具"
+        Icon="pack://application:,,,/Assets/app-icon.png"
+        Width="720" Height="560" MinWidth="560" MinHeight="420"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BgBrush}"
+        KeyDown="Window_KeyDown">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" MinHeight="0"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title Bar -->
+        <Border Grid.Row="0" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20,16">
+            <StackPanel Orientation="Horizontal">
+                <Border Width="44" Height="44" CornerRadius="10" Margin="0,0,12,0" ClipToBounds="True">
+                    <Image Source="pack://application:,,,/Assets/app-icon.png" Stretch="UniformToFill"/>
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="Port Terminator" FontWeight="SemiBold" FontSize="16" Foreground="{StaticResource TextPrimaryBrush}"/>
+                    <TextBlock Text="端口终结工具 · 版本 1.0.0" FontSize="11" Foreground="{StaticResource TextSecondaryBrush}"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Release Port Action -->
+        <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20,14">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="120"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="端口号" VerticalAlignment="Center" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}"/>
+                <TextBox x:Name="PortInputBox" Grid.Column="1" Height="36" VerticalContentAlignment="Center" Padding="8,0"
+                         Text="{Binding TerminatePortText, UpdateSourceTrigger=PropertyChanged}">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding ReleasePortByNumberCommand}"/>
+                    </TextBox.InputBindings>
+                </TextBox>
+                <Button Grid.Column="2" Content="释放端口" Style="{StaticResource PrimaryButton}" Margin="12,0,8,0" Padding="20,8"
+                        Command="{Binding ReleasePortByNumberCommand}" IsEnabled="{Binding CanReleasePort}"/>
+                <Button Grid.Column="3" Content="强制终结" Style="{StaticResource OutlineButton}" Foreground="#FAAD14" Padding="16,8"
+                        Command="{Binding ForceKillPortByNumberCommand}" IsEnabled="{Binding CanReleasePort}"/>
+            </Grid>
+        </Border>
+
+        <!-- Operation Logs -->
+        <Border Grid.Row="2" Style="{StaticResource CardBorder}" Margin="16" Padding="0">
+            <DockPanel Margin="16" LastChildFill="True">
+                <DockPanel DockPanel.Dock="Top" Margin="0,0,0,12">
+                    <Button DockPanel.Dock="Right" Content="清空日志" Style="{StaticResource NavButton}" Padding="4"
+                            Foreground="{StaticResource PrimaryBrush}"
+                            Command="{Binding ClearLogsCommand}"/>
+                    <TextBlock Text="操作日志" FontWeight="SemiBold" FontSize="16"/>
+                </DockPanel>
+                <ListBox ItemsSource="{Binding RecentLogs}"
+                         BorderThickness="0"
+                         Background="Transparent"
+                         Padding="0"
+                         MinHeight="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         PreviewMouseWheel="LogList_PreviewMouseWheel">
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0,0,0,4"/>
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Focusable" Value="False"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter/>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Timestamp, StringFormat=yyyy-MM-dd HH:mm:ss}" Width="140"
+                                           Foreground="{StaticResource TextSecondaryBrush}" FontSize="12"/>
+                                <Border Background="{Binding Level, Converter={StaticResource LogBrush}}" CornerRadius="4"
+                                        Padding="6,2" Margin="0,0,8,0">
+                                    <TextBlock Text="{Binding Level, Converter={StaticResource LogText}}"
+                                               Foreground="White" FontSize="11"/>
+                                </Border>
+                                <TextBlock Text="{Binding Action}" FontSize="12" Margin="0,0,8,0" TextWrapping="Wrap"/>
+                                <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}">
+                                    <Run Text="操作人: "/><Run Text="{Binding Operator}"/>
+                                </TextBlock>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </DockPanel>
+        </Border>
+
+        <!-- Confirm Dialog Overlay -->
+        <Grid Grid.RowSpan="3" Panel.ZIndex="10000" Background="#80000000"
+              Visibility="{Binding PortDetail.ShowConfirmDialog, Converter={StaticResource BoolToVis}}"
+              MouseLeftButtonDown="ConfirmOverlay_BackdropClick">
+            <Border Width="420" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="24"
+                    Background="White" CornerRadius="8" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                    DataContext="{Binding PortDetail}"
+                    MouseLeftButtonDown="ConfirmDialog_StopPropagation">
+                <StackPanel>
+                    <TextBlock Text="{Binding ConfirmTitle}" FontWeight="SemiBold" FontSize="16" Margin="0,0,0,16"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <TextBlock Text="⚠" FontSize="32" Foreground="#FAAD14" Margin="0,0,16,0"/>
+                        <StackPanel>
+                            <TextBlock Text="{Binding ConfirmMessage}" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock Text="{Binding ConfirmSubMessage}" Foreground="{StaticResource TextSecondaryBrush}"
+                                       TextWrapping="Wrap" Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                    <CheckBox Content="下次不再提示" IsChecked="{Binding DontShowAgain}" Margin="0,0,0,16"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="取消" Style="{StaticResource OutlineButton}" Margin="0,0,8,0"
+                                Command="{Binding CancelConfirmCommand}" IsDefault="False"/>
+                        <Button Content="{Binding ConfirmButtonText}" Style="{StaticResource DangerButton}"
+                                Command="{Binding ExecuteConfirmCommand}" IsDefault="True"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Toast -->
+        <Border Grid.RowSpan="3" Panel.ZIndex="100" VerticalAlignment="Top" HorizontalAlignment="Center" Margin="0,60,0,0"
+                Background="White" CornerRadius="8" Padding="16,10" IsHitTestVisible="False"
+                Visibility="{Binding IsToastVisible, Converter={StaticResource BoolToVis}}">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="12" ShadowDepth="2" Opacity="0.15"/>
+            </Border.Effect>
+            <StackPanel Orientation="Horizontal">
+                <Ellipse Width="8" Height="8" Fill="{Binding ToastLevel, Converter={StaticResource LogBrush}}" Margin="0,0,10,0"/>
+                <TextBlock Text="{Binding ToastMessage}"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

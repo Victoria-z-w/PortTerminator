@@ -62,6 +62,18 @@ git push origin v1.0.0
 
 Release 页面将包含 `PortTerminator-Setup-1.0.0.exe` 安装向导，用户下载后双击即可安装。
 
+### 发布到 Gitee Release
+
+1. 在 [Gitee 私人令牌](https://gitee.com/profile/personal_access_tokens) 生成令牌（需 `projects` 权限）
+2. 本地打包后执行：
+
+```powershell
+$env:GITEE_TOKEN = '你的令牌'
+.\scripts\publish-gitee-release.ps1 -Version 1.0.0
+```
+
+Gitee 仓库：[https://gitee.com/hherr54tge3tg/port-terminator](https://gitee.com/hherr54tge3tg/port-terminator)
+
 > 安装包为自包含发布（Self-contained），用户无需单独安装 .NET 运行时。
 
 ## 功能
